@@ -108,12 +108,20 @@ pipeline {
                 docker push ${IMAGE_NAME}:${SHORT_COMMIT} | tee docker-push.txt
               '''
               script {
-                def pushOutput = readFile('docker-push.txt')
-                def digestMatch = pushOutput =~ /digest:\s*(sha256:[0-9a-f]{64})/
-                if (!digestMatch.find()) {
+                def pushedDigest = sh(
+                  script: '''
+                    awk '/digest: sha256:/ {
+                      for (i = 1; i <= NF; i++) {
+                        if ($i == "digest:") print $(i + 1)
+                      }
+                    }' docker-push.txt | tail -n 1
+                  ''',
+                  returnStdout: true
+                ).trim()
+                if (!pushedDigest.startsWith('sha256:') || pushedDigest.length() != 71) {
                   error "Docker push did not produce an immutable digest"
                 }
-                env.IMAGE_DIGEST = "${env.IMAGE_NAME}@${digestMatch.group(1)}"
+                env.IMAGE_DIGEST = "${env.IMAGE_NAME}@${pushedDigest}"
                 writeFile file: 'image-digest.txt', text: env.IMAGE_DIGEST
               }
             }
