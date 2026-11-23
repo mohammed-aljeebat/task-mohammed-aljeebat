@@ -109,13 +109,7 @@ pipeline {
               '''
               script {
                 def pushedDigest = sh(
-                  script: '''
-                    awk '/digest: sha256:/ {
-                      for (i = 1; i <= NF; i++) {
-                        if ($i == "digest:") print $(i + 1)
-                      }
-                    }' docker-push.txt | tail -n 1
-                  ''',
+                  script: "grep -Eo 'sha256:[0-9a-f]{64}' docker-push.txt | tail -n 1",
                   returnStdout: true
                 ).trim()
                 if (!pushedDigest.startsWith('sha256:') || pushedDigest.length() != 71) {
