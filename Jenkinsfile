@@ -28,9 +28,21 @@ pipeline {
         script {
           try {
             container('docker') {
-              sh 'mkdir -p test-results'
-              sh 'docker build --target build --tag simple-java-app:test .'
-              sh 'docker build --tag ${IMAGE_NAME}:${SHORT_COMMIT} .'
+              sh '''
+                remaining=60
+                until docker info >/dev/null 2>&1; do
+                  if [ "$remaining" -le 0 ]; then
+                    echo "Docker daemon did not become ready within 120 seconds" >&2
+                    exit 1
+                  fi
+                  remaining=$((remaining - 1))
+                  sleep 2
+                done
+                docker info
+                mkdir -p test-results
+                docker build --target build --tag simple-java-app:test .
+                docker build --tag ${IMAGE_NAME}:${SHORT_COMMIT} .
+              '''
             }
             container('docker') {
               sh '''
@@ -43,7 +55,6 @@ pipeline {
               '''
             }
           } finally {
-            junit allowEmptyResults: true, testResults: 'target/surefire-reports/*.xml'
             archiveArtifacts allowEmptyArchive: true, artifacts: 'target/surefire-reports/**,test-results/**'
           }
         }
@@ -55,8 +66,8 @@ pipeline {
         script {
           container('trivy') {
             sh '''
-              trivy --download-db-only
-              trivy --download-java-db-only
+              trivy image --download-db-only
+              trivy image --download-java-db-only
               trivy image \
                 --scanners vuln \
                 --format json \
@@ -92,10 +103,13 @@ pipeline {
           )]) {
             container('docker') {
               sh 'echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin'
-              sh 'docker push ${IMAGE_NAME}:${SHORT_COMMIT} | tee docker-push.txt'
+              sh '''
+                set -o pipefail
+                docker push ${IMAGE_NAME}:${SHORT_COMMIT} | tee docker-push.txt
+              '''
               script {
                 def pushOutput = readFile('docker-push.txt')
-                def digestMatch = pushOutput =~ /digest:\\s*(sha256:[0-9a-f]{64})/
+                def digestMatch = pushOutput =~ /digest:\s*(sha256:[0-9a-f]{64})/
                 if (!digestMatch.find()) {
                   error "Docker push did not produce an immutable digest"
                 }
@@ -134,10 +148,12 @@ pipeline {
                 -H 'Host: quest.local' \
                 http://ingress-nginx-controller.ingress-nginx.svc.cluster.local/ \
                 | tee smoke-greeting.txt
+              grep -Fxq 'Hello Mohammed Al Jeebat' smoke-greeting.txt
               curl --fail --retry 12 --retry-delay 5 --retry-all-errors \
                 -H 'Host: quest.local' \
                 http://ingress-nginx-controller.ingress-nginx.svc.cluster.local/actuator/health \
                 > smoke-health.json
+              grep -Fq '"status":"UP"' smoke-health.json
             '''
           }
         }

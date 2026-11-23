@@ -72,7 +72,7 @@ resource "kubernetes_role_v1" "jenkins_deployer" {
   rule {
     api_groups = ["apps"]
     resources  = ["deployments"]
-    verbs      = ["get", "list", "watch", "patch", "update"]
+    verbs      = ["get", "list", "watch", "create", "patch", "update"]
   }
   rule {
     api_groups = [""]
