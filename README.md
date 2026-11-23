@@ -185,6 +185,13 @@ a known-good image. A failing-test demonstration also verifies that Surefire
 reports are archived on failure. The earlier smoke-test agent failure did
 trigger rollback, but it was not a controlled failed-rollout test.
 
+## Submission note
+
+This submission is one day late. This was my first time working with the
+Docker, Jenkins, Kubernetes, and Terraform toolchain, so I needed additional
+time. The controlled failure-gate and rollout-recovery demonstrations and a
+fresh Terraform plan were not completed before submission.
+
 Terraform state is stored locally and can contain secrets. Keep
 `terraform/terraform.tfstate` and backups out of Git and do not send them with
 the handover. Rotate the Jenkins administrator password before transferring
