@@ -95,13 +95,15 @@ builder without stronger isolation.
 
 ## Verified release and handover status
 
-The successful end-to-end Jenkins run checked out commit
-`058fc7b40c28bd8bc8b0638893bf3bb10626116d`. All four Maven tests passed, the
-Trivy gate passed, and the commit tag `058fc7b40c28` was pushed and deployed
+Jenkins Build #10 checked out commit
+`b9a1089c09bf175cfbf634d2a6ed7f647c044b9c`. All four Maven tests passed, the
+Trivy gate passed, and the commit tag `b9a1089c09bf` was pushed and deployed
 by digest:
-`mohammedaljeebat/simple-java-app@sha256:38a5ec4442d06177a6db8e1fd1a8c780b69b2194f63d4aebc97ca55ccd5e7cd5`.
+`mohammedaljeebat/simple-java-app@sha256:4951760e05630c6b723553ff7bd749a7c863836fb1f21cd09de04ef1b0b2684d`.
 Ingress returned `Hello Mohammed Al Jeebat` and health `UP`; Kubernetes was
-verified with two ready replicas on that digest.
+verified with two ready replicas on that digest. A pod deletion recovery
+check recreated the pod and the Ingress greeting and health checks still
+passed.
 
 The successful Jenkins build archives the test reports, Trivy report and
 scanner/database version information, image digest, greeting/health responses,
@@ -118,8 +120,6 @@ Still required for formal sign-off:
   known-good image. A prior smoke-test agent startup failure did trigger
   rollback to the then-current `simple-java-app:local`, but this was not a
   controlled rollout-failure test.
-- Delete one app Pod and verify the Deployment recreates it and returns to
-  two ready replicas.
 - Re-run and retain a reviewed Terraform plan and post-apply no-change plan
   using protected inputs.
 - Rotate the Jenkins administrator password before ownership transfer.

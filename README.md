@@ -161,12 +161,15 @@ provider versions, temporary Kubernetes agents, and
 privileged Docker-in-Docker sidecar; isolate these build workers and do not
 treat this local lab as a production security boundary.
 
-The successful end-to-end run checked out commit
-`058fc7b40c28bd8bc8b0638893bf3bb10626116d`, passed all four Maven tests and
-the Trivy gate, pushed tag `058fc7b40c28`, and deployed digest
-`sha256:38a5ec4442d06177a6db8e1fd1a8c780b69b2194f63d4aebc97ca55ccd5e7cd5`.
+Jenkins Build #10 checked out commit
+`b9a1089c09bf175cfbf634d2a6ed7f647c044b9c`, passed all four Maven tests and
+the Trivy gate, pushed tag `b9a1089c09bf`, and deployed digest
+`sha256:4951760e05630c6b723553ff7bd749a7c863836fb1f21cd09de04ef1b0b2684d`.
 The Jenkins smoke checks passed for the Ingress greeting and health endpoint.
 The live Deployment was verified with two ready replicas using that digest.
+A pod deletion recovery check also passed: Kubernetes recreated the pod,
+returned to two ready replicas, and the Ingress greeting and health checks
+remained successful.
 Jenkins archives the scan report, scanner/database version information, test
 reports, image digest, and deployment/smoke-test results; download those
 artifacts from the successful build before tearing down the cluster.
@@ -175,11 +178,11 @@ The checked-in [trivy-report.json](trivy-report.json) is a local scan of
 `simple-java-app:local`, not the image digest listed above. Use the report
 archived by the successful Jenkins run as the release scan evidence.
 
-The happy path is verified. Before final handover, still demonstrate that a
-failing test and a Trivy finding both stop publication/deployment, verify a
-failed rollout restores a known-good image, and verify a deleted pod is
-recreated. The earlier smoke-test agent failure did trigger rollback, but it
-was not a controlled failed-rollout test.
+The happy path and pod recovery are verified. Before final handover, still
+demonstrate that a failing test and a Trivy finding both stop
+publication/deployment, and verify a controlled failed rollout restores a
+known-good image. The earlier smoke-test agent failure did trigger rollback,
+but it was not a controlled failed-rollout test.
 
 Terraform state is stored locally and can contain secrets. Keep
 `terraform/terraform.tfstate` and backups out of Git and do not send them with
