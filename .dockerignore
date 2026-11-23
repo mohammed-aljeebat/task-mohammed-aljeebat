@@ -1,0 +1,8 @@
+.git
+.gitignore
+target
+terraform
+k8s
+Jenkinsfile
+README.md
+TASK.md

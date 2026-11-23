@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: simple-java-app
+  namespace: quest
+data:
+  YOUR_NAME: "Mohammed Al Jeebat"

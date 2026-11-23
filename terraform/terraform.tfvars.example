@@ -1,0 +1,7 @@
+kubeconfig         = "~/.kube/config"
+kube_context       = "kind-quest"
+jenkins_namespace  = "ci"
+# Inject sensitive values through environment variables or a protected tfvars file.
+jenkins_admin_password = "replace-me"
+dockerhub_username     = ""
+dockerhub_token        = ""
