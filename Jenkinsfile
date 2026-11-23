@@ -144,7 +144,7 @@ pipeline {
               '''
             }
           }
-          container('curl') {
+          container('kubectl') {
             sh '''
               curl --fail --retry 12 --retry-delay 5 --retry-all-errors \
                 -H 'Host: quest.local' \
