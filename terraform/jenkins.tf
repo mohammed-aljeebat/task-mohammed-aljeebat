@@ -47,7 +47,7 @@ resource "helm_release" "jenkins" {
                         serviceAccount: "jenkins"
                         containers:
                           - name: "jnlp"
-                            image: "jenkins/inbound-agent:3273.v4cfe589b_ef4a_-4"
+                            image: "jenkins/inbound-agent:3198.v03a_401881f3e-1-jdk17"
                             args: "^$${computer.jnlpmac} ^$${computer.name}"
                           - name: "docker"
                             image: "docker:28.5.2-cli"
@@ -61,6 +61,10 @@ resource "helm_release" "jenkins" {
                             image: "docker:28.5.2-dind"
                             ttyEnabled: true
                             privileged: true
+                            envVars:
+                              - envVar:
+                                  key: "DOCKER_TLS_CERTDIR"
+                                  value: ""
                           - name: "trivy"
                             image: "aquasec/trivy:0.76.2"
                             ttyEnabled: true
@@ -73,7 +77,7 @@ resource "helm_release" "jenkins" {
                                   key: "DOCKER_HOST"
                                   value: "tcp://localhost:2375"
                           - name: "kubectl"
-                            image: "rancher/kubectl:v1.31.2"
+                            image: "alpine/k8s:1.31.2"
                             ttyEnabled: true
                             command: "cat"
                           - name: "curl"
