@@ -113,9 +113,10 @@ teardown. The checked-in `trivy-report.json` is a scan of the local
 
 Still required for formal sign-off:
 
-- Demonstrate a failing test gate and confirm no image is pushed or deployed
-  and Surefire reports are archived.
-- Demonstrate a Trivy finding gate and confirm no push or deployment follows.
+- Demonstrate at least one failing delivery gate—a failing test or a Trivy
+  finding—and confirm that it prevents publication/deployment. Prefer the
+  failing-test check because it also verifies Surefire reports are archived
+  when tests fail.
 - Exercise a controlled failed rollout and verify recovery to an immutable
   known-good image. A prior smoke-test agent startup failure did trigger
   rollback to the then-current `simple-java-app:local`, but this was not a

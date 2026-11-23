@@ -179,10 +179,11 @@ The checked-in [trivy-report.json](trivy-report.json) is a local scan of
 archived by the successful Jenkins run as the release scan evidence.
 
 The happy path and pod recovery are verified. Before final handover, still
-demonstrate that a failing test and a Trivy finding both stop
-publication/deployment, and verify a controlled failed rollout restores a
-known-good image. The earlier smoke-test agent failure did trigger rollback,
-but it was not a controlled failed-rollout test.
+demonstrate that at least one failing gate (a failing test or a Trivy finding)
+stops publication/deployment, and verify a controlled failed rollout restores
+a known-good image. A failing-test demonstration also verifies that Surefire
+reports are archived on failure. The earlier smoke-test agent failure did
+trigger rollback, but it was not a controlled failed-rollout test.
 
 Terraform state is stored locally and can contain secrets. Keep
 `terraform/terraform.tfstate` and backups out of Git and do not send them with
