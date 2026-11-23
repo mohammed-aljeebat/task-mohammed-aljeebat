@@ -29,8 +29,13 @@ resource "kubernetes_role_v1" "jenkins_agents" {
   }
   rule {
     api_groups = [""]
-    resources  = ["secrets", "configmaps"]
+    resources  = ["secrets"]
     verbs      = ["get", "list"]
+  }
+  rule {
+    api_groups = [""]
+    resources  = ["configmaps"]
+    verbs      = ["get", "list", "watch"]
   }
 }
 
