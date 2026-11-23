@@ -27,30 +27,15 @@ variable "jenkins_admin_password" {
   type        = string
   sensitive   = true
   default     = ""
-}
 
-variable "dockerhub_username" {
-  description = "Docker Hub username"
-  type        = string
-  sensitive   = true
-  default     = ""
-}
-
-variable "dockerhub_token" {
-  description = "Docker Hub access token"
-  type        = string
-  sensitive   = true
-  default     = ""
+  validation {
+    condition     = trimspace(var.jenkins_admin_password) != ""
+    error_message = "Set a non-empty Jenkins administrator password through a protected input."
+  }
 }
 
 variable "jenkins_git_url" {
   description = "Git remote containing the Jenkinsfile"
   type        = string
   default     = "https://github.com/mohammed-aljeebat/task-mohammed-aljeebat.git"
-}
-
-variable "dockerhub_image" {
-  description = "Docker Hub repository, for example username/simple-java-app"
-  type        = string
-  default     = "CHANGE_ME/simple-java-app"
 }

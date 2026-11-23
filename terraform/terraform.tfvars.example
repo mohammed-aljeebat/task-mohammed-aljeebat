@@ -1,7 +1,5 @@
 kubeconfig         = "~/.kube/config"
 kube_context       = "kind-quest"
 jenkins_namespace  = "ci"
-# Inject sensitive values through environment variables or a protected tfvars file.
-jenkins_admin_password = "replace-me"
-dockerhub_username     = ""
-dockerhub_token        = ""
+# Set TF_VAR_jenkins_admin_password in the local environment, or add the value
+# only to an untracked, protected terraform.tfvars file.

@@ -25,7 +25,7 @@ try {
   docker rm -f simple-java-app-verify 2>$null | Out-Null
 }
 
-$digest = docker inspect --format '{{index .RepoDigests 0}}' $image
+$imageId = docker inspect --format '{{.Id}}' $image
 $trivy = Get-Command trivy -ErrorAction SilentlyContinue
 if (-not $trivy) {
   $trivy = Get-ChildItem "$env:LOCALAPPDATA\Microsoft\WinGet\Packages" -Filter trivy.exe -Recurse -ErrorAction SilentlyContinue |
@@ -35,8 +35,7 @@ if (-not $trivy) { throw "Trivy is not installed" }
 $trivyPath = if ($trivy.Source) { $trivy.Source } else { $trivy.FullName }
 & $trivyPath image --scanners vuln --format json --output trivy-report.json --severity UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL --exit-code 1 $image
 & $trivyPath --version | Set-Content -Encoding utf8 trivy-version.txt
-docker inspect --format '{{.Id}}' $image | Set-Content -Encoding utf8 image-digest.txt
 
 Write-Host "Greeting: Hello Explorer"
 Write-Host "Health: UP"
-Write-Host "Image ID written to image-digest.txt"
+Write-Host "Image ID: $imageId"

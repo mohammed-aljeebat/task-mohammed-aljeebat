@@ -29,6 +29,7 @@ pipeline {
           try {
             container('docker') {
               sh '''
+                set +e
                 remaining=60
                 until docker info >/dev/null 2>&1; do
                   if [ "$remaining" -le 0 ]; then
@@ -39,19 +40,19 @@ pipeline {
                   sleep 2
                 done
                 docker info
-                mkdir -p test-results
                 docker build --target build --tag simple-java-app:test .
-                docker build --tag ${IMAGE_NAME}:${SHORT_COMMIT} .
-              '''
-            }
-            container('docker') {
-              sh '''
-                mkdir -p test-results
+                build_status=$?
                 docker run --rm \
                   -v "$WORKSPACE:/workspace" \
                   -w /workspace \
                   maven:3.9.11-eclipse-temurin-17 \
                   mvn -B -ntp test
+                report_test_status=$?
+                if [ "$build_status" -ne 0 ] || [ "$report_test_status" -ne 0 ]; then
+                  echo "Build or test failed (Docker build: $build_status, report test: $report_test_status)" >&2
+                  exit 1
+                fi
+                docker build --tag ${IMAGE_NAME}:${SHORT_COMMIT} .
               '''
             }
           } finally {

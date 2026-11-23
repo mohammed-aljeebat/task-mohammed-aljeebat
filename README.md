@@ -26,7 +26,7 @@ blank, the application uses `traveler`. The Kubernetes
   run in Docker, and the final image runs as a non-root user.
 - [k8s/](k8s/) — Deployment, ConfigMap, internal Service, and Ingress.
 - [terraform/](terraform/) — Jenkins Helm release, service accounts, and RBAC.
-- [Jenkinsfile](Jenkinsfile) — proposed build, scan, push, and deployment stages.
+- [Jenkinsfile](Jenkinsfile) — Kubernetes-agent build, test, scan, push, digest deployment, smoke test, and rollback pipeline.
 - [scripts/](scripts/) — PowerShell helpers for the local lab.
 - [RUNBOOK.md](RUNBOOK.md) — additional operational notes.
 
@@ -37,7 +37,7 @@ containers, then run them from this directory. Java and Maven do not need to
 be installed on the host.
 
 ```powershell
-cd C:\git\remote\task\Task
+# Run from the repository root.
 docker build -t simple-java-app:local .
 ```
 
@@ -71,8 +71,8 @@ From this directory, create the cluster and ingress controller:
 .\scripts\kind-up.ps1
 ```
 
-The current Terraform configuration expects the `quest` namespace to already
-exist. Create it if it is not present:
+Terraform creates the `quest` namespace. If you are deploying the app locally
+without Terraform, create the namespace first:
 
 ```powershell
 kubectl --context kind-quest create namespace quest
@@ -152,18 +152,40 @@ kubectl --context kind-quest -n ci port-forward svc/jenkins 8081:8080
 
 Open `http://localhost:8081/` while that command is running.
 
-## Pipeline and security status
+## Pipeline and handover status
 
-The Jenkinsfile describes checkout, Docker build and test, Trivy scan, Docker
-Hub push, digest deployment, smoke testing, and attempted rollback. It is
-**not yet verified end to end**: Docker Hub credentials and image settings
-are required, and the bootstrapped job references the remote repository with
-`Jenkinsfile` at its root, whereas this project is under `Task/`. The agent
-tooling, deployer permissions, failure handling, and rollback also need
-validation before relying on the pipeline. Its current smoke test targets the
-internal Service rather than Ingress. Plugin versions are not pinned, and
-Docker-in-Docker uses a privileged agent; this is a lab, not a production-ready
-security boundary.
+The Jenkins job is bootstrapped from the root `Jenkinsfile` in the configured
+Git repository. Jenkins uses Configuration as Code, pinned chart/plugin and
+provider versions, temporary Kubernetes agents, and
+`disableConcurrentBuilds()` to prevent overlapping builds. The pipeline uses a
+privileged Docker-in-Docker sidecar; isolate these build workers and do not
+treat this local lab as a production security boundary.
+
+The successful end-to-end run checked out commit
+`058fc7b40c28bd8bc8b0638893bf3bb10626116d`, passed all four Maven tests and
+the Trivy gate, pushed tag `058fc7b40c28`, and deployed digest
+`sha256:38a5ec4442d06177a6db8e1fd1a8c780b69b2194f63d4aebc97ca55ccd5e7cd5`.
+The Jenkins smoke checks passed for the Ingress greeting and health endpoint.
+The live Deployment was verified with two ready replicas using that digest.
+Jenkins archives the scan report, scanner/database version information, test
+reports, image digest, and deployment/smoke-test results; download those
+artifacts from the successful build before tearing down the cluster.
+
+The checked-in [trivy-report.json](trivy-report.json) is a local scan of
+`simple-java-app:local`, not the image digest listed above. Use the report
+archived by the successful Jenkins run as the release scan evidence.
+
+The happy path is verified. Before final handover, still demonstrate that a
+failing test and a Trivy finding both stop publication/deployment, verify a
+failed rollout restores a known-good image, and verify a deleted pod is
+recreated. The earlier smoke-test agent failure did trigger rollback, but it
+was not a controlled failed-rollout test.
+
+Terraform state is stored locally and can contain secrets. Keep
+`terraform/terraform.tfstate` and backups out of Git and do not send them with
+the handover. Rotate the Jenkins administrator password before transferring
+ownership; use protected inputs and an encrypted, access-controlled remote
+backend for shared environments.
 
 Trivy can scan the final local image with:
 
